@@ -1,0 +1,4 @@
+##gitignore file list##
+.idea
+/src/test
+/target/
