@@ -1,4 +1,4 @@
-package com.qingcheng.controller;
+package com.qingcheng.controller.goods;
 
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.qingcheng.pojo.entity.PageResult;
@@ -46,7 +46,6 @@ public class BrandController {
          brandService.add(brand);
          return  new Result();
     }
-
     @PostMapping("/update")
     public Result update(@RequestBody Brand brand){
         brandService.update(brand);
