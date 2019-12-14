@@ -1,5 +1,0 @@
-##gitignore file list##
-.idea
-/src/test
-/target/
-.iml
