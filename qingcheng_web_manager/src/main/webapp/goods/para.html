@@ -71,7 +71,7 @@
                     </el-form-item>
 
                     <el-button class="dalfBut" @click="fetchData()">查询</el-button>
-                    <el-button type="primary" class="butT" @click="formVisible=true;pojo={}">新增</el-button>
+                    <el-button type="primary" class="butT" @click="formVisible=true;pojo={templateId: templateId}">新增</el-button>
                     <el-button type="primary" class="butT" onclick="location.href='template.html'">返回模板列表</el-button>
                 </el-form>
             </div>
@@ -111,15 +111,14 @@
                             <el-input v-model="pojo.name"></el-input>
                         </el-form-item>
                         <el-form-item label="选项">
-                            <el-input v-model="pojo.options"></el-input>
+                            <el-input v-model="pojo.options"
+                                      type="textarea"
+                                      :autosize="{ minRows: 2, maxRows: 4}"
+                            ></el-input>
                         </el-form-item>
                         <el-form-item label="排序">
                             <el-input v-model="pojo.seq"></el-input>
                         </el-form-item>
-                        <el-form-item label="模板ID">
-                            <el-input v-model="pojo.templateId"></el-input>
-                        </el-form-item>
-
                         <!-- 图片上传代码 如页面有图片上传功能放开注释 ****
                         <el-form-item label="图片">
                             <el-upload
@@ -164,10 +163,12 @@
                 searchMap: {},
                 pojo: {},
                 formVisible: false,
-                imageUrl: ''
+                imageUrl: '',
+                templateId:0
             }
         },
         created() {
+            this.templateId=getQueryString("id")
             this.searchMap ={ templateId : getQueryString("id") }
             this.fetchData();
         },
@@ -180,9 +181,11 @@
             },
             save() {
                 // this.pojo.image= this.imageUrl; //如页面有图片上传功能放开注释
+                this.pojo.options = this.pojo.options.replace(/\n/g,",")
                 axios.post(`/para/${this.pojo.id == null ? 'add' : 'update'}.do`, this.pojo).then(response => {
                     this.fetchData(); //刷新列表
                     this.formVisible = false;//关闭窗口
+
                 });
             },
             edit(id) {
@@ -191,6 +194,7 @@
                 axios.get(`/para/findById.do?id=${id}`).then(response => {
                     this.pojo = response.data;
                     // this.imageUrl=this.pojo.image //显示图片  如页面有图片上传功能放开注释
+                    this.pojo.options = this.pojo.options.replace(/,/g,"\n")
                 })
             },
             dele(id) {
