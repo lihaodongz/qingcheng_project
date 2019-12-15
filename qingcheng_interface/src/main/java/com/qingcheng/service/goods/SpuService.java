@@ -1,6 +1,9 @@
 package com.qingcheng.service.goods;
 import com.qingcheng.entity.PageResult;
+import com.qingcheng.pojo.goods.Goods;
 import com.qingcheng.pojo.goods.Spu;
+import com.sun.javafx.binding.StringFormatter;
+import sun.net.www.protocol.http.ntlm.NTLMAuthentication;
 
 import java.util.*;
 
@@ -32,4 +35,24 @@ public interface SpuService {
 
     public void delete(String id);
 
+    public void saveGoods(Goods goods);
+
+    public Goods findGoodsById(String id);
+
+    public void audit(String id, String status, String message);
+
+
+    public void pull(String id);
+
+    public void put(String id);
+
+    public int putMany(Long[] ids);
+
+    public int pullMany(Long[] ids);
+
+    /*逻辑删除*/
+    public void deleteLogic(String id);
+
+    /*逻辑回收，回复商品*/
+    public void recycleLogic(String id);
 }
