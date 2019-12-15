@@ -9,14 +9,14 @@
 | total_money  | 金额合计 | INT   |      |      |
 | pre_money  | 优惠金额 | INT   |      |      |
 | post_fee  | 邮费 | INT   |      |      |
-| pay_money  | 实付金额 | INT   |      |      |
-| pay_type  | 支付类型，1、在线支付、0 货到付款 | VARCHAR   |      |      |
-| create_time  | 订单创建时间 | DATETIME   |      |      |
-| update_time  | 订单更新时间 | DATETIME   |      |      |
+| pay_money  | 实付金额 单位是分，金钱单位全部是分，避免计算的时候发生精度丢失  | INT   |      |      |
+| pay_type  | 支付类型，3. 银联支付 2. 支付宝支付 1、微信支付、0 货到付款 | VARCHAR   |      |      |
+| create_time  | 订单创建时间 用户点击结算【类似操作】自动生成订单，意义等价于交易开始时间| DATETIME   |      |      |
+| update_time  | 订单更新时间 订单状态改变时更新当前值 | DATETIME   |      |      |
 | pay_time  | 付款时间 | DATETIME   |      |      |
 | consign_time  | 发货时间 | DATETIME   |      |      |
-| end_time  | 交易完成时间 | DATETIME   |      |      |
-| close_time  | 交易关闭时间 | DATETIME   |      |      |
+| end_time  | 交易完成时间 正常操作， | DATETIME   |      |      |
+| close_time  | 交易关闭时间 非正常操作，下单但是未支付导致超时交易关闭| DATETIME   |      |      |
 | shipping_name  | 物流名称 | VARCHAR   |      |      |
 | shipping_code  | 物流单号 | VARCHAR   |      |      |
 | username  | 用户名称 | VARCHAR   |      |      |
@@ -26,11 +26,12 @@
 | receiver_mobile  | 收货人手机 | VARCHAR   |      |      |
 | receiver_address  | 收货人地址 | VARCHAR   |      |      |
 | source_type  | 订单来源：1:web，2：app，3：微信公众号，4：微信小程序  5 H5手机页面 | CHAR   |      |      |
-| transaction_id  | 交易流水号 | VARCHAR   |      |      |
-| order_status  | 订单状态 | CHAR   |      |      |
-| pay_status  | 支付状态 | CHAR   |      |      |
-| consign_status  | 发货状态 | CHAR   |      |      |
-| is_delete  | 是否删除 | CHAR   |      |      |
+| transaction_id  | 交易流水号  支付方式不同返回的流水号不同，唯一标识本地交易| VARCHAR   |      |      |
+| order_status  | 订单状态 0 未付款 1 代发货 2 已发货 3 已完成 4 已关闭| CHAR   |      |      |
+| pay_status  | 支付状态 CHAR  0 未支付 1 已支付 2 退款| CHAR |      |      |
+| consign_status  | 发货状态 0 未发货 1 已发货 | CHAR   |      |      |
+| is_delete  | 是否删除 0 未删除 1 已删除 | CHAR   |      |      |
+
 
 
 
