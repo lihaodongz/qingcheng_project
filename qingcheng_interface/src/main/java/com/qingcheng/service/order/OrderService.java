@@ -1,7 +1,9 @@
 package com.qingcheng.service.order;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.order.Order;
+import com.qingcheng.pojo.order.Orders;
 
+import java.rmi.MarshalledObject;
 import java.util.*;
 
 /**
@@ -31,5 +33,14 @@ public interface OrderService {
 
 
     public void delete(String id);
+
+
+    public Orders selectOrdersById(String id);
+
+    public List<Order> findByIds(Map<String,String[]> searchMap);
+
+
+    public void  betchSend(List<Order> orders);
+
 
 }

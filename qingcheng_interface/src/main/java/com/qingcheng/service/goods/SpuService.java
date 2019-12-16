@@ -2,8 +2,6 @@ package com.qingcheng.service.goods;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.goods.Goods;
 import com.qingcheng.pojo.goods.Spu;
-import com.sun.javafx.binding.StringFormatter;
-import sun.net.www.protocol.http.ntlm.NTLMAuthentication;
 
 import java.util.*;
 

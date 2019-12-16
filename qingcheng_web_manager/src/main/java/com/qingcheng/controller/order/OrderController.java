@@ -1,10 +1,14 @@
 package com.qingcheng.controller.order;
 
 import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.entity.Result;
 import com.qingcheng.pojo.order.Order;
+import com.qingcheng.pojo.order.Orders;
 import com.qingcheng.service.order.OrderService;
+import org.springframework.web.bind.EscapedErrors;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -60,4 +64,24 @@ public class OrderController {
         return new Result();
     }
 
-}
+    @GetMapping("/findOrdersById")
+    public Orders findOrdersById(String id){
+        Orders orders = orderService.selectOrdersById(id);
+        return orders;
+    }
+    /**
+     * 通过ids查询订单信息，
+     */
+
+    @PostMapping("/findByIds")
+    public List<Order> findByIds(@RequestBody Map<String,String[]> searchMap){
+        return orderService.findByIds(searchMap);
+    }
+
+    @PostMapping("/batchSend")
+    public Result batchSend(@RequestBody List<Order> orders){
+        orderService.betchSend(orders);
+        return new Result();
+    }
+
+ }

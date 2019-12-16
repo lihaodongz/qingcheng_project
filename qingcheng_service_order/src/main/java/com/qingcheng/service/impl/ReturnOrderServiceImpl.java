@@ -2,13 +2,19 @@ package com.qingcheng.service.impl;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.qingcheng.dao.OrderItemMapper;
+import com.qingcheng.dao.ReturnOrderItemMapper;
 import com.qingcheng.dao.ReturnOrderMapper;
 import com.qingcheng.entity.PageResult;
+import com.qingcheng.pojo.order.OrderItem;
 import com.qingcheng.pojo.order.ReturnOrder;
+import com.qingcheng.pojo.order.ReturnOrderItem;
 import com.qingcheng.service.order.ReturnOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import tk.mybatis.mapper.entity.Example;
 
+import javax.swing.text.html.MinimalHTMLWriter;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +23,12 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
 
     @Autowired
     private ReturnOrderMapper returnOrderMapper;
+
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+
+    @Autowired
+    private ReturnOrderItemMapper returnOrderItemMapper;
 
     /**
      * 返回全部记录
@@ -93,6 +105,56 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
      */
     public void delete(Long id) {
         returnOrderMapper.deleteByPrimaryKey(id);
+    }
+
+    public void agreeReFund(String id, Integer money, Integer adminId) {
+        ReturnOrder returnOrder = returnOrderMapper.selectByPrimaryKey(id);
+        if(returnOrder==null){
+            throw  new RuntimeException("退款订单不存在");
+        }
+        if(returnOrder.getType().equals("2")){
+            throw new RuntimeException("当前订单不是退款订单");
+        }
+        if(money>returnOrder.getReturnMoney()){
+            throw new RuntimeException("退款金额数目大于订单金额");
+        }
+        returnOrder.setStatus("1");
+        returnOrder.setAdminId(adminId);
+        returnOrder.setDisposeTime(new Date());
+        returnOrderMapper.updateByPrimaryKeySelective(returnOrder);
+        //调用支付接口，完成退款
+    }
+
+    /*修改订单的状态，之后修改订单明细的状态 拒绝退款之后，订单明细则修改为未申请状态*/
+    public void rejectReFund(String id, String remark, Integer adminId) {
+        ReturnOrder returnOrder = returnOrderMapper.selectByPrimaryKey(id);
+        if(returnOrder == null){
+            throw new RuntimeException();
+        }
+        if(returnOrder.getType().equals("2")){
+            throw  new RuntimeException();
+        }
+        if(returnOrder.getRemark().length()<5){
+
+        }
+        returnOrder.setRemark(remark);
+        returnOrder.setStatus("2");
+        returnOrder.setAdminId(adminId);
+        returnOrder.setDisposeTime(new Date());
+        returnOrderMapper.updateByPrimaryKeySelective(returnOrder);
+
+        /*修改订单明细状态*/
+
+        Example example = new Example(ReturnOrderItem.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("returnOrderId",id);
+        List<ReturnOrderItem> returnOrderItems = returnOrderItemMapper.selectByExample(example);
+        for (ReturnOrderItem returnOrderItem :returnOrderItems){
+            OrderItem orderItem = new OrderItem();
+            orderItem.setId(String.valueOf(returnOrderItem.getOrderItemId()));
+            orderItem.setIsReturn("0");
+            orderItemMapper.updateByPrimaryKeySelective(orderItem);
+        }
     }
 
     /**

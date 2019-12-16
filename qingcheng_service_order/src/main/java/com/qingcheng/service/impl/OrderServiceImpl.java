@@ -1,22 +1,39 @@
 package com.qingcheng.service.impl;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.qingcheng.dao.OrderItemMapper;
+import com.qingcheng.dao.OrderLogMapper;
 import com.qingcheng.dao.OrderMapper;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.order.Order;
+import com.qingcheng.pojo.order.OrderItem;
+import com.qingcheng.pojo.order.OrderLog;
+import com.qingcheng.pojo.order.Orders;
 import com.qingcheng.service.order.OrderService;
+import com.qingcheng.util.IdWorker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import sun.awt.image.OffScreenImage;
+import sun.util.resources.ga.LocaleNames_ga;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-@Service
+@Service(interfaceClass = OrderService.class)
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderMapper orderMapper;
+    @Autowired
+    private OrderItemMapper orderItemMapper;
+    @Autowired
+    OrderLogMapper orderLogMapper;
 
     /**
      * 返回全部记录
@@ -94,6 +111,66 @@ public class OrderServiceImpl implements OrderService {
     public void delete(String id) {
         orderMapper.deleteByPrimaryKey(id);
     }
+
+    /**
+     * id查询orders 对象
+     * 查询对象，然后组合
+     * @param id
+     * @return
+     */
+    public Orders selectOrdersById(String id) {
+        Orders orders = new Orders();
+        Order order = orderMapper.selectByPrimaryKey(id);
+        Example example = new Example(OrderItem.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("orderId",order.getId());
+        List<OrderItem> orderItems = orderItemMapper.selectByExample(example);
+        orders.setOrder(order);
+        orders.setOrderItems(orderItems);
+        return orders;
+    }
+
+    public List<Order> findByIds(Map<String,String[]> searchMap) {
+        Example example = new Example(Order.class);
+        Example.Criteria criteria = example.createCriteria();
+        if (searchMap.get("ids")!=null){
+            criteria.andIn("id", Arrays.asList(searchMap.get("ids")));
+            return orderMapper.selectByExample(example);
+        }
+         throw new  RuntimeException("传入参数不合法，或为空");
+    }
+
+    /*批量发货*/
+    @Transactional
+    public void betchSend(List<Order> orders) {
+       /* 1. 参数校验[循环判断是否存在null]
+          2. 根据参数修改db的状态
+                订单状态，发货状态，发货时间
+          3. 生成记录记录
+       */
+     /*  Order orderItem = null; 直接操作order对象即可，*/
+       for (Order order :orders) {
+           if (order.getShippingCode() == null || order.getShippingName() == null) {
+               throw new RuntimeException("请填写快递单号和选择快递公司");
+           }
+       }
+       //循环订单处理
+       for(Order order:orders){
+            order.setOrderStatus("3");
+            order.setConsignStatus("2");
+            order.setConsignTime(new Date());
+            orderMapper.updateByPrimaryKeySelective(order);
+            OrderLog orderLog = new OrderLog();
+            orderLog.setId(String.valueOf(IdWorker.getId()));
+            orderLog.setConsignStatus("2");
+            orderLog.setOperateTime(new Date());
+            orderLog.setOperater("admin");
+            orderLog.setOrderStatus("3");
+            orderLog.setOrderId(order.getId());
+            orderLogMapper.insert(orderLog);
+       }
+    }
+
 
     /**
      * 构建查询条件

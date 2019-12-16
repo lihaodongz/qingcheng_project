@@ -32,4 +32,11 @@ public interface ReturnOrderService {
 
     public void delete(Long id);
 
+    /*同意退款后台接口*/
+    public void agreeReFund(String id,Integer money,Integer adminId);
+
+    /*拒绝退款后台接口*/
+
+    public  void rejectReFund(String id,String remark,Integer adminId);
+
 }

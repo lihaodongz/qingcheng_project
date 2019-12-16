@@ -7,6 +7,7 @@ import com.qingcheng.pojo.order.ReturnOrder;
 import com.qingcheng.service.order.ReturnOrderService;
 import org.springframework.web.bind.annotation.*;
 
+import javax.jnlp.IntegrationService;
 import java.util.*;
 
 @RestController
@@ -60,4 +61,17 @@ public class ReturnOrderController {
         return new Result();
     }
 
+    @PostMapping("/agreeReFund")
+    public Result agreeReFund(String id,Integer money){
+        Integer adminId = 0;
+        returnOrderService.agreeReFund(id,money,adminId);
+        return new Result();
+    }
+
+    @PostMapping("/rejectFund")
+    public Result rejectFund(String id,String remark){
+        Integer adminId = 0;
+        returnOrderService.rejectReFund(id,remark,adminId);
+        return new Result();
+    }
 }

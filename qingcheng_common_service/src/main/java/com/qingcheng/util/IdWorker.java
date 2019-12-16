@@ -160,4 +160,9 @@ public class IdWorker {
     }
 
 
+    public static Long getId(){
+        return new IdWorker().nextId();
+    }
+
+
 }
