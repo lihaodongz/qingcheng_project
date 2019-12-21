@@ -1,25 +1,21 @@
 package com.qingcheng.service.impl;
 import com.alibaba.dubbo.config.annotation.Service;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.google.common.base.Preconditions;
+import com.qingcheng.dao.OrderConfigMapper;
 import com.qingcheng.dao.OrderItemMapper;
 import com.qingcheng.dao.OrderLogMapper;
 import com.qingcheng.dao.OrderMapper;
 import com.qingcheng.entity.PageResult;
-import com.qingcheng.pojo.order.Order;
-import com.qingcheng.pojo.order.OrderItem;
-import com.qingcheng.pojo.order.OrderLog;
-import com.qingcheng.pojo.order.Orders;
+import com.qingcheng.pojo.order.*;
 import com.qingcheng.service.order.OrderService;
 import com.qingcheng.util.IdWorker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import sun.awt.image.OffScreenImage;
-import sun.util.resources.ga.LocaleNames_ga;
 import tk.mybatis.mapper.entity.Example;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -34,6 +30,8 @@ public class OrderServiceImpl implements OrderService {
     private OrderItemMapper orderItemMapper;
     @Autowired
     OrderLogMapper orderLogMapper;
+    @Autowired
+    OrderConfigMapper orderConfigMapper;
 
     /**
      * 返回全部记录
@@ -149,6 +147,7 @@ public class OrderServiceImpl implements OrderService {
           3. 生成记录记录
        */
      /*  Order orderItem = null; 直接操作order对象即可，*/
+        Preconditions.checkNotNull(orders);
        for (Order order :orders) {
            if (order.getShippingCode() == null || order.getShippingName() == null) {
                throw new RuntimeException("请填写快递单号和选择快递公司");
@@ -169,6 +168,45 @@ public class OrderServiceImpl implements OrderService {
             orderLog.setOrderId(order.getId());
             orderLogMapper.insert(orderLog);
        }
+    }
+
+   /* 订单超时处理,1.拿到配置的超时时间，2填充task，3完成逻辑判断*/
+    public void orderTimeOutLogic() {
+        OrderConfig orderConfig = orderConfigMapper.selectByPrimaryKey(1);
+        Integer orderTimeout = orderConfig.getOrderTimeout();
+        LocalDateTime localDateTime = LocalDateTime.now().minusMinutes(orderTimeout);  //拿到超时时间点
+        Example example = new Example(Order.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andLessThan("createTime",localDateTime);
+        criteria.andEqualTo("orderStatus","0");
+        criteria.andEqualTo("isDelete","0");
+        List<Order> orders = orderMapper.selectByExample(example);
+        for (Order order:orders){
+            /*日志记录*/
+            order.setOrderStatus("4");
+            order.setCloseTime(new Date());
+            generatorOrderLog(order,"systemadMin","订单超时，系统自动关闭");
+            orderMapper.updateByPrimaryKeySelective(order);
+        }
+
+    }
+
+    @Override
+    public void mergeOrder(String order1, String order2) {
+        if (order1 ==null || "".equals(order1) || order2==null || "".equals(order2)){
+            throw new RuntimeException("订单号存在异常");
+        }
+        // zorder 主订单  forder 副订单  订单合并需要合并订单的数量和金额信息.优惠金额和实际支付金额
+        Order zorder = orderMapper.selectByPrimaryKey(order1);
+        Order forder = orderMapper.selectByPrimaryKey(order2);
+        zorder.setTotalNum(zorder.getTotalNum()+forder.getTotalNum());
+        zorder.setTotalMoney(zorder.getTotalMoney()+forder.getTotalMoney());
+        zorder.setPayMoney(zorder.getPreMoney()+forder.getPreMoney());
+        zorder.setPayMoney(zorder.getPayMoney()+forder.getPayMoney());
+        forder.setIsDelete("1");
+        orderMapper.updateByPrimaryKeySelective(zorder);
+        //日志记录到orderlog中
+        generatorOrderLog(zorder,"systenadMin","订单合并");
     }
 
 
@@ -271,4 +309,19 @@ public class OrderServiceImpl implements OrderService {
         return example;
     }
 
+    //记录订单修改的操作，order表属性赋值结束之后生成订单
+    private void  generatorOrderLog(Order order, String opreator, String remark){
+        OrderLog orderLog =new OrderLog();
+        orderLog.setId(String.valueOf(IdWorker.getId()));
+        orderLog.setOperater(opreator);
+        orderLog.setOperateTime(new Date());
+        orderLog.setOrderStatus(order.getOrderStatus());
+        orderLog.setPayStatus(order.getPayStatus());
+        orderLog.setConsignStatus(order.getConsignStatus());
+        orderLog.setRemarks(remark);
+        orderLog.setOrderId(order.getId());
+        orderLogMapper.insert(orderLog);
+    }
 }
+
+

@@ -6,8 +6,6 @@ import com.qingcheng.entity.Result;
 import com.qingcheng.pojo.order.ReturnOrder;
 import com.qingcheng.service.order.ReturnOrderService;
 import org.springframework.web.bind.annotation.*;
-
-import javax.jnlp.IntegrationService;
 import java.util.*;
 
 @RestController
@@ -61,6 +59,7 @@ public class ReturnOrderController {
         return new Result();
     }
 
+    //退款申请
     @PostMapping("/agreeReFund")
     public Result agreeReFund(String id,Integer money){
         Integer adminId = 0;

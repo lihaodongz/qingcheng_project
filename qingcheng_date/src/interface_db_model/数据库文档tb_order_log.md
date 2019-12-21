@@ -4,14 +4,14 @@
 
 | 字段名称 | 字段含义 | 字段类型| 字段长度 | 备注   |
 | ---- | ---- | ------- | ---- | ---- |
-| id  | ID | VARCHAR   |      |      |
-| operater  | 操作员 | VARCHAR   |      |      |
-| operate_time  | 操作时间 | DATETIME   |      |      |
-| order_id  | 订单ID | VARCHAR   |      |      |
-| order_status  | 订单状态 | CHAR   |      |      |
-| pay_status  | 付款状态 | CHAR   |      |      |
-| consign_status  | 发货状态 | CHAR   |      |      |
-| remarks  | 备注 | VARCHAR   |      |      |
+| id  | ID | VARCHAR   |      |   idworker   |
+| operater  | 操作员 | VARCHAR   |      |  自己定义    |
+| operate_time  | 操作时间 | DATETIME   |      |   new date()    |
+| order_id  | 订单ID | VARCHAR   |      |     order.getid |
+| order_status  | 订单状态 | CHAR   |      |   order.getstatus   |
+| pay_status  | 付款状态 | CHAR   |      |    order.get...  |
+| consign_status  | 发货状态 | CHAR   |      |   order.getconsi   |
+| remarks  | 备注 | VARCHAR   |      |    自己定义  |
 
 
 
