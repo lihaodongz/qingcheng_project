@@ -21,6 +21,7 @@
         <module>qingcheng_service_business</module>
         <module>qingcheng_web_manager</module>
         <module>qingcheng_date</module>
+        <module>qingcheng_web_protal</module>
     </modules>
 
     <packaging>pom</packaging>

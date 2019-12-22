@@ -21,9 +21,10 @@
         <form-login
                 login-page="/login.html"
                 default-target-url="/main.html"
-                authentication-failure-url="/login.html"/>
+                authentication-failure-url="/login.html"
+                authentication-success-handler-ref="loginHandler"/>
         <!--退出登陆  /logout post-->
-        <logout/>
+        <logout />
         <!--关闭csrf验证   跨站请求伪造  token-->
         <csrf disabled="true"></csrf>
         <!--同源策略-->
@@ -41,4 +42,5 @@
     <!--定义请求类-->
     <beans:bean id="userDetailService" class="com.qingcheng.controller.UserDetailServiceImpl"></beans:bean>
     <beans:bean id="bcryptEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></beans:bean>
+    <beans:bean  id="loginHandler" class="com.qingcheng.controller.AuthenticationSuccessHandlerImpl"></beans:bean>
 </beans:beans>

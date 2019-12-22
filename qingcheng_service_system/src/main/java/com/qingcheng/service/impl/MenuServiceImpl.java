@@ -9,6 +9,8 @@ import com.qingcheng.service.system.MenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -93,6 +95,29 @@ public class MenuServiceImpl implements MenuService {
      */
     public void delete(String id) {
         menuMapper.deleteByPrimaryKey(id);
+    }
+
+    /*查询所有菜单*/
+    public List<Map> findAllMenu() {
+        List<Menu> allMenu = findAll();
+        return findMenuListByParentId(allMenu,"0");
+    }
+
+    //利用
+    private List<Map> findMenuListByParentId(List<Menu> allMenu, String parentId) {
+        ArrayList<Map> mapList = new ArrayList<Map>();
+        for (Menu menu : allMenu){
+            if (menu.getParentId().equals(parentId)){
+                Map map = new HashMap();
+                map.put("path",menu.getId());
+                map.put("title",menu.getName());
+                map.put("icon",menu.getIcon());
+                map.put("linkUrl",menu.getUrl());
+                map.put("children",findMenuListByParentId(allMenu,menu.getId()));
+                mapList.add(map);
+            }
+        }
+        return mapList;
     }
 
     /**

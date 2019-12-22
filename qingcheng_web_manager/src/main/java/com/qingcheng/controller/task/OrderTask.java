@@ -18,7 +18,7 @@ public class OrderTask {
 
     @Scheduled(cron = "2 0/2 * * * ? ")
     public void orderTimeOutLogic(){
-            orderService.orderTimeOutLogic();
+        orderService.orderTimeOutLogic();
     }
 
     /*

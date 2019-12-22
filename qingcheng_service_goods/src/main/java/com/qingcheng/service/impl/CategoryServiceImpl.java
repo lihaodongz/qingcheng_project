@@ -7,8 +7,11 @@ import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.goods.Category;
 import com.qingcheng.service.goods.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +20,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Autowired
     private CategoryMapper categoryMapper;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 返回全部记录
@@ -101,6 +107,45 @@ public class CategoryServiceImpl implements CategoryService {
            throw  new RuntimeException("存在下级分类不能删除");
         }
         categoryMapper.deleteByPrimaryKey(id);
+    }
+
+    public List<Map> findCategoryTree() {
+        /*查询符合所有的条数*/
+        Example example = new Example(Category.class);
+        Example.Criteria criteria = example.createCriteria();
+        Example.Criteria criteria1 = criteria.andEqualTo("isShow", "1");
+        example.setOrderByClause("seq");
+        List<Category> categories = categoryMapper.selectByExample(example);
+        return findByPatentId(categories,0);
+    }
+
+
+
+   /* 保存到redis*/
+    public void saveCategoryTreeToRedis() {
+        /*1.查询商品分类导航
+          2. 保存到redi*/
+
+        Example example = new Example(Category.class);
+        Example.Criteria criteria = example.createCriteria();
+        Example.Criteria criteria1 = criteria.andEqualTo("isShow", "1");
+        example.setOrderByClause("seq");
+        List<Category> categories = categoryMapper.selectByExample(example);
+        List<Map> categoryTree = findByPatentId(categories, 0);
+        redisTemplate.opsForValue().set("tree",categoryTree);
+    }
+
+    private List<Map> findByPatentId(List<Category> categories, Integer parentId){
+        List<Map> mapList = new ArrayList<Map>();
+        for(Category category :categories){
+            if (category.getParentId().equals(parentId)){
+                Map map = new HashMap();
+                map.put("name",category.getName());
+                map.put("menus",findByPatentId(categories,category.getId()));
+                mapList.add(map);
+            }
+        }
+        return mapList;
     }
 
     /**
