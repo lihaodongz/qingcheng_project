@@ -18,4 +18,6 @@ public class init implements InitializingBean {
         log.info("缓存预热");
         categoryService.saveCategoryTreeToRedis();
     }
+
+
 }

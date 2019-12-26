@@ -15,13 +15,14 @@
                                   ignore-unresolvable="true" />
 
     <!-- 创建MongoClient -->
-    <mongo:mongo-client id="mongo" replica-set="${mongo.hostport}">
+    <mongo:mongo-client id="mongo" replica-set="${mongo.hostport}"
+                        host="${mongo.host}" port="${mongo.port}" credentials="${mongo.username}:${mongo.password}@${mongo.defaultDbName}">
         <mongo:client-options connections-per-host="${mongo.connectionsPerHost}"
                               threads-allowed-to-block-for-connection-multiplier=
                                       "${mongo.threadsAllowedToBlockForConnectionMultiplier}"
                               connect-timeout="${mongo.connectTimeout}" max-wait-time="${mongo.maxWaitTime}"
                               socket-keep-alive="${mongo.socketKeepAlive}"
-                              socket-timeout="${mongo.socketTimeout}" />
+                              socket-timeout="${mongo.socketTimeout}"/>
     </mongo:mongo-client>
 
     <!-- MongoDbFactory -->

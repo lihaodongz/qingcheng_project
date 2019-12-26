@@ -2,6 +2,8 @@ package com.qingcheng.service.impl;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.qingcheng.IConsts.IConsts;
+import com.qingcheng.IConsts.IConstsRedis;
 import com.qingcheng.dao.CategoryMapper;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.goods.Category;
@@ -82,7 +84,9 @@ public class CategoryServiceImpl implements CategoryService {
      * @param category
      */
     public void add(Category category) {
+
         categoryMapper.insert(category);
+        saveCategoryTreeToRedis();
     }
 
     /**
@@ -91,6 +95,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     public void update(Category category) {
         categoryMapper.updateByPrimaryKeySelective(category);
+        saveCategoryTreeToRedis();
     }
 
     /**
@@ -107,16 +112,22 @@ public class CategoryServiceImpl implements CategoryService {
            throw  new RuntimeException("存在下级分类不能删除");
         }
         categoryMapper.deleteByPrimaryKey(id);
+        saveCategoryTreeToRedis();
     }
 
     public List<Map> findCategoryTree() {
-        /*查询符合所有的条数*/
-        Example example = new Example(Category.class);
-        Example.Criteria criteria = example.createCriteria();
-        Example.Criteria criteria1 = criteria.andEqualTo("isShow", "1");
-        example.setOrderByClause("seq");
-        List<Category> categories = categoryMapper.selectByExample(example);
-        return findByPatentId(categories,0);
+        List<Map> result = (List<Map>) redisTemplate.opsForValue().get(IConstsRedis.Category_tree_redis);
+        if (result == null) {
+            /*查询符合所有的条数*/
+            Example example = new Example(Category.class);
+            Example.Criteria criteria = example.createCriteria();
+            Example.Criteria criteria1 = criteria.andEqualTo("isShow", "1");
+            example.setOrderByClause("seq");
+            List<Category> categories = categoryMapper.selectByExample(example);
+            return findByPatentId(categories, 0);
+        }else{
+            return  result;
+        }
     }
 
 
@@ -132,7 +143,7 @@ public class CategoryServiceImpl implements CategoryService {
         example.setOrderByClause("seq");
         List<Category> categories = categoryMapper.selectByExample(example);
         List<Map> categoryTree = findByPatentId(categories, 0);
-        redisTemplate.opsForValue().set("tree",categoryTree);
+        redisTemplate.opsForValue().set(IConstsRedis.Category_tree_redis,categoryTree);
     }
 
     private List<Map> findByPatentId(List<Category> categories, Integer parentId){
