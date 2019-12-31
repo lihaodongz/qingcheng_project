@@ -9,10 +9,19 @@ import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.goods.Sku;
 import com.qingcheng.service.goods.SkuService;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import tk.mybatis.mapper.entity.Example;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +33,9 @@ public class SkuServiceImpl implements SkuService {
     private SkuMapper skuMapper;
     @Autowired
     RedisTemplate redisTemplate;
+
+    @Autowired
+    RestHighLevelClient client;
 
     /**
      * 返回全部记录
@@ -130,6 +142,54 @@ public class SkuServiceImpl implements SkuService {
     @Override
     public void deletePriceFromRedis(String id) {
         redisTemplate.opsForHash().delete(IConstsRedis.Sku_Prize,id);
+    }
+
+    @Override
+    public String addDataToEs() {
+       /* 先查询所有数据,
+        封装数据对象
+        批量插入*/
+        BulkRequest bulkRequest = new BulkRequest();
+       /* Example example = new Example(Sku.class);
+        Example.Criteria criteria = example.createCriteria();
+        *//*criteria.andEqualTo("status",1);
+        criteria.andEqualTo("categoryId",76);*//*
+        criteria.andEqualTo("id","100000047372");
+        List<Sku> skuList = skuMapper.selectByExample(example);*/
+        List<Sku> skuList = skuMapper.find50();
+        for (Sku sku :skuList){
+            IndexRequest indexRequest = new IndexRequest("test","doc",String.valueOf(sku.getId()));
+            Map skuMap = new HashMap();
+            skuMap.put("name",sku.getName());
+            skuMap.put("brandName",sku.getBrandName());
+            skuMap.put("image",sku.getImage());
+            skuMap.put("categoryName",sku.getCategoryName());
+            skuMap.put("price",sku.getPrice());
+            skuMap.put("createTime",sku.getCreateTime());
+            skuMap.put("saleNum",sku.getSaleNum());
+            skuMap.put("commentNum",sku.getCommentNum());
+            Map spec=new HashMap();
+            spec.put("颜色",sku.getSpec().split(",")[0]==null?"默认":sku.getSpec().split(",")[0].split(":")[1]);
+            skuMap.put("spec",spec);
+            indexRequest.source(skuMap);
+            bulkRequest.add(indexRequest);
+        }
+
+        BulkResponse  bulk = null;
+        try {
+            bulk = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            int status = bulk.status().getStatus();
+            log.info(String.valueOf(status));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+           /* try {
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }*/
+        }
+        return "ok";
     }
 
     /**

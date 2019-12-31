@@ -39,4 +39,7 @@ public interface SkuService {
     public void savePriceToRedisById(String id,Integer price);
 
     public void deletePriceFromRedis(String id);
+
+
+    public String addDataToEs();
 }

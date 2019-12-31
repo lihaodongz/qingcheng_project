@@ -1,5 +1,6 @@
 package com.qingcheng.service.impl;
 
+import com.alibaba.dubbo.config.annotation.Service;
 import com.qingcheng.service.goods.SkuSearchService;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
@@ -14,13 +15,14 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Service
 public class SkuSearchServiceImpl implements SkuSearchService {
 
     @Autowired
@@ -30,13 +32,14 @@ public class SkuSearchServiceImpl implements SkuSearchService {
     public Map search(Map<String,String> searchMap) {
         /*封装查询请求*/
         /*设置索引和类型*/
-        SearchRequest searchRequest = new SearchRequest("sku");
+        SearchRequest searchRequest = new SearchRequest("test");
         searchRequest.types("doc");
         /*查询器 and 构建查询语句*/
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         MatchQueryBuilder matchQueryBuilder = QueryBuilders.matchQuery("name",searchMap.get("keywords"));
         boolQueryBuilder.must(matchQueryBuilder);
+
         searchSourceBuilder.query(boolQueryBuilder);
         searchRequest.source(searchSourceBuilder);
         /*处理结果*/
@@ -47,7 +50,7 @@ public class SkuSearchServiceImpl implements SkuSearchService {
             long totalHits = hits.getTotalHits(); /*总数*/
             log.info("allNUm"+totalHits);
             SearchHit[] hits1 = hits.getHits();
-            ArrayList<Map<String, Object>> resultList = new ArrayList<>();
+            List<Map<String, Object>> resultList = new ArrayList<Map<String,Object>>();
             for (SearchHit hit:hits1){
                 /*取到结果对象*/
                 Map<String, Object> skumap = hit.getSourceAsMap();
@@ -57,7 +60,6 @@ public class SkuSearchServiceImpl implements SkuSearchService {
         }catch (IOException e){
             e.printStackTrace();
         }
-
         return resultMap;
     }
 }
