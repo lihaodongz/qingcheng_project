@@ -38,6 +38,7 @@ public interface AdService {
     /*保存广告轮播图*/
     public void saveAdToRedisByPosition(String position);
 
+
     public void saveAllToRedis();
 
 }

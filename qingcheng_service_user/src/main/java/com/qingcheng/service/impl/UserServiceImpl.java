@@ -7,6 +7,7 @@ import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.user.User;
 import com.qingcheng.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import tk.mybatis.mapper.entity.Example;
 
 import java.util.List;

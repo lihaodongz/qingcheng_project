@@ -2,21 +2,28 @@ package com.qingcheng.service.impl;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.qingcheng.IConsts.IConsts;
+import com.qingcheng.IConsts.IConstsRedis;
 import com.qingcheng.dao.SkuMapper;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.goods.Sku;
 import com.qingcheng.service.goods.SkuService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import tk.mybatis.mapper.entity.Example;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class SkuServiceImpl implements SkuService {
 
     @Autowired
     private SkuMapper skuMapper;
+    @Autowired
+    RedisTemplate redisTemplate;
 
     /**
      * 返回全部记录
@@ -93,6 +100,36 @@ public class SkuServiceImpl implements SkuService {
      */
     public void delete(String id) {
         skuMapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public void saveAllPriceToRedis() {
+        if (!redisTemplate.hasKey(IConstsRedis.Sku_Prize)){
+            log.info("缓存价格到redis");
+            List<Sku> skus = skuMapper.selectAll();
+            for (Sku sku:skus){
+                if ("1".equals(sku.getStatus())){
+                    redisTemplate.opsForHash().put(IConstsRedis.Sku_Prize,sku.getId(),sku.getPrice());
+                }
+            }
+        }{
+            log.info("redis中已有数据");
+        }
+    }
+
+    @Override
+    public Integer findPrice(String id) {
+        return (Integer) redisTemplate.opsForHash().get(IConstsRedis.Sku_Prize,id);
+    }
+
+    @Override
+    public void savePriceToRedisById(String id, Integer price) {
+        redisTemplate.opsForHash().put(IConstsRedis.Sku_Prize,id,price);
+    }
+
+    @Override
+    public void deletePriceFromRedis(String id) {
+        redisTemplate.opsForHash().delete(IConstsRedis.Sku_Prize,id);
     }
 
     /**

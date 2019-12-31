@@ -1,5 +1,7 @@
 package com.qingcheng.IConsts;
 
+import com.sun.org.apache.regexp.internal.RE;
+
 /*缓存key设置的接口*/
 public interface  IConstsRedis extends  IConsts{
     /*缓存前缀*/
@@ -15,6 +17,8 @@ public interface  IConstsRedis extends  IConsts{
 
     /*广告轮播图*/
     public final String   Category_ad_redis = REDIS_PREFIX+"ad";
+
+    public final String   Sku_Prize = REDIS_PREFIX+"price";
 
 
     static String getRedisKey(String key){

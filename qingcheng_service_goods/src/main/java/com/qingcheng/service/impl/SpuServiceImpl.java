@@ -9,6 +9,7 @@ import com.qingcheng.dao.SkuMapper;
 import com.qingcheng.dao.SpuMapper;
 import com.qingcheng.entity.PageResult;
 import com.qingcheng.pojo.goods.*;
+import com.qingcheng.service.goods.SkuService;
 import com.qingcheng.service.goods.SpuService;
 import com.qingcheng.util.IdWorker;
 import org.apache.zookeeper.ZooDefs;
@@ -17,10 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 import tk.mybatis.mapper.weekend.Weekend;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service(interfaceClass = SpuService.class)
 public class SpuServiceImpl implements SpuService {
@@ -35,6 +33,8 @@ public class SpuServiceImpl implements SpuService {
     CategoryMapper categoryMapper;
     @Autowired
     CategoryBrandMapper categoryBrandMapper;
+    @Autowired
+    SkuService skuService;
 
     /**
      * 返回全部记录
@@ -165,6 +165,8 @@ public class SpuServiceImpl implements SpuService {
             sku.setCommentNum(0);
             sku.setSaleNum(0);
             skuMapper.insert(sku);
+            /*重新将价格更新到缓存*/
+            skuService.savePriceToRedisById(sku.getId(),sku.getPrice());
         }
 
 
@@ -270,6 +272,13 @@ public class SpuServiceImpl implements SpuService {
      * @param id
      */
     public void deleteLogic(String id) {
+        /*删除缓存中价格*/
+        Map<String,Object> map = new HashMap();
+        map.put("spuId",id);
+        List<Sku> skuList = skuService.findList(map);
+        for (Sku sku :skuList){
+            skuService.deletePriceFromRedis(sku.getId());
+        }
        /* 判断当前商品是否已经删除 [判断是版本1 ，最终直接修改，不判断。判断必须先查，效率不高，省去一个查询的sql时间]
         是: 返回 否 删除，记录日志*/
      Spu spu = new Spu();

@@ -6,7 +6,7 @@
 | ---- | ---- | ------- | ---- | ---- |
 | id  | ID | INT   |      |      |
 | name  | 广告名称 | VARCHAR   |      |      |
-| position  | 广告位置 | VARCHAR   |      |      |
+| position  | 广告位置 | VARCHAR   |       |  在页面中广告被划分为几大块，每一个区域的广告不一样     |
 | start_time  | 开始时间 | DATETIME   |      |      |
 | end_time  | 到期时间 | DATETIME   |      |      |
 | status  | 状态 | CHAR   |      |      |

@@ -145,9 +145,9 @@ public class AdServiceImpl implements AdService {
         Example example = new Example(Ad.class);
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("positon", position);
-        criteria.andLessThanOrEqualTo("startTime", new Date());
-        criteria.andGreaterThanOrEqualTo("endTime", new Date());
-        criteria.andEqualTo("status", 1);
+        criteria.andLessThanOrEqualTo("startTime", new Date());  // 当前时间大于开始时间， 广告播放都是有限制的
+        criteria.andGreaterThanOrEqualTo("endTime", new Date()); // 当前时间小于结束时间
+        criteria.andEqualTo("status", 1);    /*标识广告当前是否有效*/
         List<Ad> ads = adMapper.selectByExample(example);
         redisTemplate.opsForHash().put(IConstsRedis.getRedisKey(position), IConstsRedis.Category_ad_redis, ads);
     }
@@ -156,15 +156,14 @@ public class AdServiceImpl implements AdService {
     private List<String> getPositionList() {
         List<String> adList = new ArrayList<String>();
         adList.add("index_1b");
+        //添加广告到列表中
         return adList;
     }
 
     public void saveAllToRedis() {
-
         for (String position : getPositionList()) {
             saveAdToRedisByPosition(position);
         }
-
     }
 
     /**
